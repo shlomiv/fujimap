@@ -11,3 +11,8 @@
 *.lai
 *.la
 *.a
+
+# config and waf temps
+.waf*
+bin
+.lock-wscript

@@ -32,8 +32,8 @@ int buildFromFile(cmdline::parser& p){
 
   istream &is=*pis;
   fujimap_tool::Fujimap fm;
-  if (p.exist("seed") {
-      fm.initSeed(p.get<int>("seed"));
+  if (p.exist("seed")) {
+    fm.initSeed(p.get<int>("seed"));
   }
 
   uint64_t fpLen = 0;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]){
     }
   } else {
     fujimap_tool::Fujimap fm;
-    if (p.exist("seed") {
+    if (p.exist("seed")) {
         fm.initSeed(p.get<int>("seed"));
     }
     if (fm.load(p.get<string>("index").c_str()) == -1){
