@@ -33,8 +33,8 @@ using namespace std;
 
 namespace fujimap_tool{
 
-Fujimap::Fujimap() :  seed_(0x123456), fpLen_(FPLEN), tmpN_(TMPN), 
-		      keyBlockN_(KEYBLOCK), et_(BINARY) {
+Fujimap::Fujimap() :  seed_(0x123456), fpLen_(FPLEN), tmpN_(TMPN),
+                      keyBlockN_(KEYBLOCK), et_(BINARY) {
   kf_.initMaxID(keyBlockN_);
 }
 
@@ -43,6 +43,10 @@ Fujimap::~Fujimap(){
 
 void Fujimap::initSeed(const uint64_t seed){
   seed_ = seed;
+}
+
+uint64_t Fujimap::getSeed() {
+  return seed_;
 }
 
 void Fujimap::initFP(const uint64_t fpLen){
@@ -70,14 +74,14 @@ void Fujimap::initEncodeType(const EncodeType et){
   et_ = et;
 }
 
-void Fujimap::setString(const char* kbuf, const size_t klen, 
-			const char* vbuf, const size_t vlen, 
-			const bool searchable){
+void Fujimap::setString(const char* kbuf, const size_t klen,
+                        const char* vbuf, const size_t vlen,
+                        const bool searchable){
   setInteger(kbuf, klen, getCode(string(vbuf, vlen)), searchable);
 }
 
-void Fujimap::setInteger(const char* kbuf, const size_t klen, 
-			 const uint64_t code, const bool searchable){
+void Fujimap::setInteger(const char* kbuf, const size_t klen,
+                         const uint64_t code, const bool searchable){
   if (searchable){
     tmpEdges_[string(kbuf, klen)] = code;
     if (tmpEdges_.size() == tmpN_){
@@ -102,12 +106,12 @@ uint64_t Fujimap::getCode(const std::string& value){
 }
 
 bool kvsEq(const pair<string, uint64_t>& v1,
-	   const pair<string, uint64_t>& v2){
+           const pair<string, uint64_t>& v2){
   return v1.first == v2.first; // ignore second
 }
 
 bool kvsComp(const pair<string, uint64_t>& v1,
-	     const pair<string, uint64_t>& v2){
+             const pair<string, uint64_t>& v2){
   return v1.first < v2.first; // ignore second
 }
 
@@ -115,7 +119,7 @@ bool kvsComp(const pair<string, uint64_t>& v1,
 uint64_t Fujimap::getBlockID(const char* kbuf, const size_t klen) const{
   return hash(kbuf, klen) % keyBlockN_;
 }
-  
+
 int Fujimap::build(){
   for (map<string, uint64_t>::const_iterator it = tmpEdges_.begin();
        it != tmpEdges_.end(); ++it){
@@ -146,7 +150,7 @@ int Fujimap::build(){
 }
 
 int Fujimap::build_(vector<pair<string, uint64_t> >& kvs,
-		    FujimapBlock& fb){
+                    FujimapBlock& fb){
   reverse(kvs.begin(), kvs.end());
   stable_sort(kvs.begin(), kvs.end(), kvsComp);
   kvs.erase(unique(kvs.begin(), kvs.end(), kvsEq), kvs.end());
@@ -159,7 +163,7 @@ int Fujimap::build_(vector<pair<string, uint64_t> >& kvs,
     vector<KeyEdge> keyEdges;
     for (size_t i = 0; i < kvs.size(); ++i){
       keyEdges.push_back(KeyEdge(kvs[i].first.c_str(), kvs[i].first.size(),
-				 kvs[i].second, seed_));
+                                 kvs[i].second, seed_));
     }
     if (fb.build(keyEdges, seed_, fpLen_, et_) == 0){
       break;
@@ -177,7 +181,7 @@ size_t Fujimap::getKeyNum() const{
       keyNum += fbs_[i][j].getKeyNum();
     }
   }
-  
+
   return keyNum;
 }
 
@@ -204,7 +208,7 @@ string Fujimap::getEncodeTypeStr() const {
   if (et_ == BINARY){
     return string("binary");
   } else if (et_ == GAMMA){
-    return string("gamma"); 
+    return string("gamma");
   } else {
     return string("undefined");
   }
@@ -290,7 +294,7 @@ int Fujimap::load(const char* index){
     what_ << "read error " << index << endl;
     return -1;
   }
-  
+
   return 0;
 }
 
@@ -342,12 +346,12 @@ int Fujimap::save(const char* index){
       fbs_[i][j].save(ofs);
     }
   }
-  
+
   if (!ofs){
     what_ << "write error " << index << endl;
     return -1;
   }
-  
+
   return 0;
 }
 

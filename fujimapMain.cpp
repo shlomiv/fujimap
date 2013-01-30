@@ -13,6 +13,7 @@ void printCurrentStatus(fujimap_tool::Fujimap& fm){
   cerr << "keyNum:       " << fm.getKeyNum() << endl
        << "fpLen:        " << fm.getFpLen() << endl
        << "encoding:     " << fm.getEncodeTypeStr() << endl
+       << "seed:         " << fm.getSeed() << endl
        << "wsize(bytes): " << wsize / 8 << endl
        << "bits/key:     " << (float)wsize / fm.getKeyNum() << endl;
 }
