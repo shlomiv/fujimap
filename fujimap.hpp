@@ -54,7 +54,7 @@ public:
   /**
    * Destructor
    */
-  ~Fujimap(); 
+  ~Fujimap();
 
   /**
    * Initialize a seed for hash function
@@ -62,11 +62,14 @@ public:
    */
   void initSeed(const uint64_t seed);
 
+  uint64_t getSeed();
+
+
   /**
    * Initialize a false positive rate
    * @param fpLen A negative of false positive rate power (prob. of false positive rate is 2^{-fpLen_})
    */
-  void initFP(const uint64_t fpLen); 
+  void initFP(const uint64_t fpLen);
 
   /**
    * Initialize a size of temporary map size. A succinct and static map will be constructured after every tmpN_ key/values are added.
@@ -75,8 +78,8 @@ public:
   void initTmpN(const uint64_t tmpN);
 
   /**
-   * Initialize a number of blocks in hash. This would be log(number of key/values). 
-   * @param keyBlockN A number of blocks. 
+   * Initialize a number of blocks in hash. This would be log(number of key/values).
+   * @param keyBlockN A number of blocks.
    */
   void initKeyBlockN(const uint64_t keyBlockN);
 
@@ -93,44 +96,44 @@ public:
   void initEncodeType(const EncodeType et);
 
   /**
-   * Set a record of key/value. 
+   * Set a record of key/value.
    * @param kbuf the pointer to the key region.
    * @param klen the length of the key.
    * @param vbuf the pointer to the value region.
    * @param vlen the length of the value.
-   * @param searchable true if this record will be searchable immediately after this operation false 
+   * @param searchable true if this record will be searchable immediately after this operation false
    * if this record will be searchable after build() is called (default: false).
    */
-  void setString(const char* kbuf, const size_t klen, 
-		 const char* vbuf, const size_t vlen,
-		 const bool searchable = false);
+  void setString(const char* kbuf, const size_t klen,
+                 const char* vbuf, const size_t vlen,
+                 const bool searchable = false);
 
   /**
    * Set a record of key/value. This record will be searchable immediately after this operation.
    * @param kbuf the pointer to the key region.
    * @param klen the length of the key.
    * @param value the interger value.
-   * @param searchable true if this record will be searchable immediately after this operation or false 
+   * @param searchable true if this record will be searchable immediately after this operation or false
    * if this record will be searchable after build() is called (defalut: false).
    */
   void setInteger(const char* kbuf, const size_t klen, const uint64_t value,
-		  const bool searchable = false); 
+                  const bool searchable = false);
 
   /**
    * Build an index for registered key/value pairs which are not indexed.
    * @return true on success, or false on failure.
    : @note when build() failed, a user specify new seed funciton by initSeed(), and retry build().
    */
-  int build(); 
+  int build();
 
   /**
    * Retrieve the string value for a key
    * @param kbuf the pointer to the key region.
    * @param klen the length of the key.
    * @param vlen the length of the value.
-   * @return the pointer to the value region of the corresponding record, or NULL  on failure. 
-   * @note Because the pointer of the returned value is a member of fm, 
-   * a user should copy the returned value if using the returned value. 
+   * @return the pointer to the value region of the corresponding record, or NULL  on failure.
+   * @note Because the pointer of the returned value is a member of fm,
+   * a user should copy the returned value if using the returned value.
   */
   const char* getString(const char* kbuf, const size_t klen, size_t& vlen) const;
 
@@ -138,7 +141,7 @@ public:
    * Retrieve the integer value for a key
    * @param kbuf the pointer to the key region.
    * @param klen the length of the key.
-   * @return the interge value for a key, or fujimap::NOTFOUND on failure. 
+   * @return the interge value for a key, or fujimap::NOTFOUND on failure.
   */
   uint64_t getInteger(const char* kbuf, const size_t klen) const;
 
@@ -194,8 +197,8 @@ public:
   std::string getEncodeTypeStr() const;
 
 private:
-  int build_(std::vector<std::pair<std::string, uint64_t> >& kvs, 
-	     FujimapBlock& fb);
+  int build_(std::vector<std::pair<std::string, uint64_t> >& kvs,
+             FujimapBlock& fb);
 
 
   void saveString(const std::string& s, std::ofstream& ofs) const; ///< Util for save
