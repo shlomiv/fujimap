@@ -170,6 +170,7 @@ int main(int argc, char* argv[]){
   cmdline::parser p;
   p.add<string>("index",       'i', "Index",                                                        true);
   p.add<string>("index2",      'o', "Other Index",                                                  false);
+  p.add<string>("test",        'T', "test file",                                                    false);
   p.add<string>("dic",         'd', "Key/Value file. when \"-\" is specified it reads from stdin",  false);
   p.add<int>   ("fpwidth",     'f', "False positive rate 2^{-f} (0 <= f < 31) ",                    false);
   p.add<int>   ("tmpN",        't', "TemporarySize",                                                false);
