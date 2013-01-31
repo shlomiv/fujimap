@@ -123,6 +123,7 @@ int buildFromFile(cmdline::parser& p){
 int main(int argc, char* argv[]){
   cmdline::parser p;
   p.add<string>("index",       'i', "Index",                                                        true);
+  p.add<string>("index2",      'o', "Other Index",                                                  false);
   p.add<string>("dic",         'd', "Key/Value file. when \"-\" is specified it reads from stdin",  false);
   p.add<int>   ("fpwidth",     'f', "False positive rate 2^{-f} (0 <= f < 31) ",                    false);
   p.add<int>   ("tmpN",        't', "TemporarySize",                                                false);
@@ -152,6 +153,7 @@ int main(int argc, char* argv[]){
     }
   } else {
     fujimap_tool::Fujimap fm;
+    fujimap_tool::Fujimap fm2;
     if (p.exist("seed")) {
         fm.initSeed(p.get<int>("seed"));
     }
@@ -159,9 +161,21 @@ int main(int argc, char* argv[]){
       cerr << fm.what() << endl;
       return -1;
     }
-
     cout << "load done. " << endl;
     printCurrentStatus(fm);
+
+    int twoIndices = p.exist("index2");
+    if (twoIndices) {
+      cout << "loading second index.." << endl;
+      if (fm2.load(p.get<string>("index2").c_str()) == -1){
+        cerr << fm.what() << endl;
+        return -1;
+      }
+      cout << "load second index done. " << endl;
+      printCurrentStatus(fm);
+
+    }
+
 
     bool stringValue = p.exist("stringvalue");
 
@@ -180,15 +194,21 @@ int main(int argc, char* argv[]){
           cout << "FOUND:" <<  sval << endl;
         }
       } else {
-        uint64_t code = fm.getInteger(key.c_str(), key.size());
-        if (code == fujimap_tool::NOTFOUND){
+
+        uint64_t code1 = fm .getInteger(key.c_str(), key.size());
+        uint64_t code2 = code1;
+
+        if (twoIndices) {
+          code2 = fm2.getInteger(key.c_str(), key.size());
+        }
+
+        if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
           cout << "NOTFOUND:" << endl;
         } else {
-          cout << "FOUND:" << code << endl;
+          cout << "FOUND:" << code1 << endl;
         }
       }
     }
   }
-
   return 0;
 }
