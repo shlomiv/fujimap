@@ -142,10 +142,6 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
   string line;
   for (size_t lineN = 1; getline(is, line); ++lineN){
     size_t p = line.find_last_of('\n');
-    if (p == string::npos){
-      cerr << "Warning: not tab found : " << line << endl;
-      continue;
-    }
     if (p == 0) continue; // no key or no value
 
     uint64_t code1 = fm1->getInteger(line.c_str(), p);
