@@ -226,7 +226,7 @@ int main(int argc, char* argv[]){
 
 
     bool stringValue = p.exist("stringvalue");
-
+    char time[100];
     string key;
     for (;;){
       cout << ">" << flush;
@@ -255,13 +255,13 @@ int main(int argc, char* argv[]){
 
         if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
           gettimeofday(&stop, NULL);
-
-          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<"ms):" << endl;
+          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros):" << endl;
         } else {
-          cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<"ms):" << code1 << endl;
+          gettimeofday(&stop, NULL);
+          cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros):" << code1 << endl;
         }
         // sleep(1);
-        //          printf("took %lu\n", stop.tv_usec - start.tv_usec);
+
       }
     }
   }
