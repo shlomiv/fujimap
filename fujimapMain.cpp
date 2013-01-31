@@ -4,6 +4,7 @@
 #include <cassert>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include "cmdline.h"
 #include "fujimap.hpp"
 
@@ -215,11 +216,11 @@ int main(int argc, char* argv[]){
     if (twoIndices) {
       cout << "loading second index.." << endl;
       if (fm2.load(p.get<string>("index2").c_str()) == -1){
-        cerr << fm.what() << endl;
+        cerr << fm2.what() << endl;
         return -1;
       }
       cout << "load second index done. " << endl;
-      printCurrentStatus(fm);
+      printCurrentStatus(fm2);
 
     }
 
@@ -257,6 +258,7 @@ int main(int argc, char* argv[]){
           cout << "FOUND:" << code1 << endl;
         }
         time_t now;
+        sleep(1);
         localtime(&now);
         cout << "time " << (now -then) << endl;
       }
