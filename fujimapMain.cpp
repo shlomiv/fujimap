@@ -224,7 +224,7 @@ int main(int argc, char* argv[]){
 
     if (p.exist("test")) {
       testFile(p, &fm, &fm2);
-      retun 0;
+      return 0;
     }
 
     bool stringValue = p.exist("stringvalue");
