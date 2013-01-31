@@ -146,14 +146,14 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
       cerr << "Warning: not tab found : " << line << endl;
       continue;
     }
-    if (p == 0 || p+1 == line.size()) continue; // no key or no value
+    if (p == 0 || p+3 == line.size()) continue; // no key or no value
 
-    uint64_t code1 = fm1->getInteger(line.c_str(), p+1);
-    uint64_t code2 = fm2->getInteger(line.c_str(), p+1);
+    uint64_t code1 = fm1->getInteger(line.c_str(), p+3);
+    uint64_t code2 = fm2->getInteger(line.c_str(), p+3);
 
     if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
     } else {
-      cout << "FOUND collision " << line.c_str() << endl;
+      cout << "FOUND collision '" << line.c_str() <<"'" <<  endl;
     }
 
     readNum++;
@@ -161,8 +161,6 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
   cerr << "read " << readNum << " keys" << endl;
 
   cerr << "test done." << endl;
-  printCurrentStatus(fm);
-
   return 0;
 }
 
