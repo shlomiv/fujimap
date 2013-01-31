@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cassert>
 #include <stdlib.h>
+#include <time.h>
 #include "cmdline.h"
 #include "fujimap.hpp"
 
@@ -119,6 +120,52 @@ int buildFromFile(cmdline::parser& p){
   return 0;
 }
 
+int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujimap* fm2){
+  istream *pis=&cin;
+  ifstream ifs;
+
+  if (p.get<string>("test") != "-"){
+    ifs.open(p.get<string>("test").c_str());
+    if (!ifs){
+      cerr << "Unable to open " << p.get<string>("test") << endl;
+      return -1;
+    }
+
+    pis = static_cast<istream*>(&ifs);
+  }
+
+  istream &is=*pis;
+  fujimap_tool::Fujimap fm;
+
+  size_t readNum = 0;
+  string line;
+  for (size_t lineN = 1; getline(is, line); ++lineN){
+    size_t p = line.find_last_of('\t');
+    if (p == string::npos){
+      cerr << "Warning: not tab found : " << line << endl;
+      continue;
+    }
+    if (p == 0 || p+1 == line.size()) continue; // no key or no value
+
+    uint64_t code1 = fm1->getInteger(line.c_str(), p+1);
+    uint64_t code2 = fm2->getInteger(line.c_str(), p+1);
+
+    if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
+    } else {
+      cout << "FOUND collision " << line.c_str() << endl;
+    }
+
+    readNum++;
+  }
+  cerr << "read " << readNum << " keys" << endl;
+
+  cerr << "test done." << endl;
+  printCurrentStatus(fm);
+
+  return 0;
+}
+
+
 
 int main(int argc, char* argv[]){
   cmdline::parser p;
@@ -195,6 +242,8 @@ int main(int argc, char* argv[]){
         }
       } else {
 
+        time_t then;
+        localtime(&then);
         uint64_t code1 = fm .getInteger(key.c_str(), key.size());
         uint64_t code2 = code1;
 
@@ -207,6 +256,9 @@ int main(int argc, char* argv[]){
         } else {
           cout << "FOUND:" << code1 << endl;
         }
+        time_t now;
+        localtime(&now);
+        cout << "time " << (now -then) << endl;
       }
     }
   }
