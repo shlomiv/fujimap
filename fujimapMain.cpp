@@ -166,8 +166,6 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
   return 0;
 }
 
-
-
 int main(int argc, char* argv[]){
   cmdline::parser p;
   p.add<string>("index",       'i', "Index",                                                        true);
@@ -224,6 +222,10 @@ int main(int argc, char* argv[]){
 
     }
 
+    if (p.exist("test")) {
+      testFile(p, &fm, &fm2);
+      retun 0;
+    }
 
     bool stringValue = p.exist("stringvalue");
     char time[100];
@@ -255,10 +257,10 @@ int main(int argc, char* argv[]){
 
         if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
           gettimeofday(&stop, NULL);
-          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros):" << endl;
+          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << endl;
         } else {
           gettimeofday(&stop, NULL);
-          cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros):" << code1 << endl;
+          cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << code1 << endl;
         }
         // sleep(1);
 
