@@ -254,13 +254,14 @@ int main(int argc, char* argv[]){
         }
 
         if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
-          cout << "NOTFOUND:" << endl;
+          gettimeofday(&stop, NULL);
+
+          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)"ms):" << endl;
         } else {
-          cout << "FOUND:" << code1 << endl;
+          cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)"ms):" << code1 << endl;
         }
         // sleep(1);
-        gettimeofday(&stop, NULL);
-        printf("took %lu\n", stop.tv_usec - start.tv_usec);
+        //          printf("took %lu\n", stop.tv_usec - start.tv_usec);
       }
     }
   }
