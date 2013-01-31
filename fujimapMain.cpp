@@ -141,15 +141,15 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
   size_t readNum = 0;
   string line;
   for (size_t lineN = 1; getline(is, line); ++lineN){
-    size_t p = line.find_last_of('\t');
+    size_t p = line.find_last_of('\n');
     if (p == string::npos){
       cerr << "Warning: not tab found : " << line << endl;
       continue;
     }
-    if (p == 0 || p+3 == line.size()) continue; // no key or no value
+    if (p == 0) continue; // no key or no value
 
-    uint64_t code1 = fm1->getInteger(line.c_str(), p+3);
-    uint64_t code2 = fm2->getInteger(line.c_str(), p+3);
+    uint64_t code1 = fm1->getInteger(line.c_str(), p);
+    uint64_t code2 = fm2->getInteger(line.c_str(), p);
 
     if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
     } else {
@@ -227,7 +227,6 @@ int main(int argc, char* argv[]){
     }
 
     bool stringValue = p.exist("stringvalue");
-    char time[100];
     string key;
     for (;;){
       cout << ">" << flush;
