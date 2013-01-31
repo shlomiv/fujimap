@@ -3,7 +3,7 @@
 #include <fstream>
 #include <cassert>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include "cmdline.h"
 #include "fujimap.hpp"
@@ -243,8 +243,9 @@ int main(int argc, char* argv[]){
         }
       } else {
 
-        time_t then;
-        localtime(&then);
+        timeval stop, start;
+        gettimeofday(&start, NULL);
+
         uint64_t code1 = fm .getInteger(key.c_str(), key.size());
         uint64_t code2 = code1;
 
@@ -257,12 +258,17 @@ int main(int argc, char* argv[]){
         } else {
           cout << "FOUND:" << code1 << endl;
         }
-        time_t now;
-        sleep(1);
-        localtime(&now);
-        cout << "time " << (now -then) << endl;
+        // sleep(1);
+        gettimeofday(&stop, NULL);
+        printf("took %lu\n", stop.tv_usec - start.tv_usec);
       }
     }
   }
   return 0;
 }
+
+
+
+
+
+  //do stuff
