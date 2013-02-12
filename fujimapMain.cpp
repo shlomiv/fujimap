@@ -20,7 +20,33 @@ void printCurrentStatus(fujimap_tool::Fujimap& fm){
        << "bits/key:     " << (float)wsize / fm.getKeyNum() << endl;
 }
 
+
+inline uint64_t decodeInteger(const unsigned char* pChar) {
+  return (uint64_t)(pChar[0] & 0x7f) + (
+                !(pChar[0] & 0x80) ? 0 : (((uint64_t)(pChar[1] & 0x7f)) << 7) + (
+                !(pChar[1] & 0x80) ? 0 : (((uint64_t)(pChar[2] & 0x7f)) << 14) + (
+                !(pChar[2] & 0x80) ? 0 : (((uint64_t)(pChar[3] & 0x7f)) << 21) + (
+                !(pChar[3] & 0x80) ? 0 : (((uint64_t)pChar[4] << 28))))));
+}
+
+inline int intLength(uint64_t i){
+  return i & 0xff0000000 ? 5 : i & 0xfe00000 ? 4 : i & 0x1fc000 ? 3 : i & 0x3f80 ? 2 : 1;
+}
+
+inline void encodeInteger(uint64_t i, unsigned char* pChar, int byteCount)
+{
+  switch (byteCount)  {
+  case 1: *((uint64_t*)pChar) = i & 0x7f; break;
+  case 2: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + 0x80; break;
+  case 3: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + ((i & 0x1fc000) << 2) + 0x8080; break;
+  case 4: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + ((i & 0x1fc000) << 2) + ((i & 0xfe00000) << 3) + 0x808080; break;
+  case 5: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + ((i & 0x1fc000) << 2) + ((i & 0xfe00000) << 3) + ((i & 0xff0000000) << 4) + 0x80808080; break;
+  }
+}
+
+
 int buildFromFile(cmdline::parser& p){
+  ofstream compfs;
   istream *pis=&cin;
   ifstream ifs;
   if (p.get<string>("dic") != "-"){
@@ -56,6 +82,16 @@ int buildFromFile(cmdline::parser& p){
     }
   }
 
+  bool hasCompanion = p.exist("companion");
+  if (hasCompanion) {
+    compfs.open(p.get<string>("companion").c_str());
+    if (!compfs){
+      cerr << "Unable to open for write " << p.get<string>("companion") << endl;
+      return -1;
+    }
+
+  }
+
   bool logValue = p.exist("logvalue");
   bool stringValue = p.exist("stringvalue");
 
@@ -73,8 +109,10 @@ int buildFromFile(cmdline::parser& p){
     fm.initEncodeType(et);
   }
 
+
   size_t readNum = 0;
   string line;
+  long offset = 1;
   for (size_t lineN = 1; getline(is, line); ++lineN){
     size_t p = line.find_last_of('\t');
     if (p == string::npos){
@@ -89,16 +127,32 @@ int buildFromFile(cmdline::parser& p){
                    line.substr(p+1).c_str(), line.substr(p+1).size(),
                    false);
     } else {
-        uint64_t val = strtoll(line.substr(p+1).c_str(), NULL, 10);
-      if (logValue){
-        if (val == 0){
-          cerr << "When -l is specified, all values should be larger than 0" << endl;
-          cerr << "line " << lineN << ":" << line << endl;
-          return -1;
-        }
-        val = fujimap_tool::log2(val);
+      uint64_t val = strtoll(line.substr(p+1).c_str(), NULL, 10);
+      if (hasCompanion){
+
+        unsigned char freq[6];
+        unsigned  int intLen = intLength(val);
+        encodeInteger(val, freq, intLen);
+
+        cout << "comp " << line.c_str() << " " << freq << " "  << offset << endl;
+        compfs.write(line.c_str(), p);
+        compfs.write("\0", 1);
+        compfs.write((char*)freq, intLen);
+
+        fm.setInteger(line.c_str(), p, offset, false);
+        offset += (p + intLen +1);
       }
-      fm.setInteger(line.c_str(), p, val, false);
+      else {
+        if (logValue){
+          if (val == 0){
+            cerr << "When -l is specified, all values should be larger than 0" << endl;
+            cerr << "line " << lineN << ":" << line << endl;
+            return -1;
+          }
+          val = fujimap_tool::log2(val);
+        }
+        fm.setInteger(line.c_str(), p, val, false);
+      }
     }
 
     readNum++;
@@ -113,11 +167,15 @@ int buildFromFile(cmdline::parser& p){
   printCurrentStatus(fm);
 
   if (fm.save(p.get<string>("index").c_str()) == -1){
-    cerr << fm.what() << endl;
+    cerr << "could not save " << fm.what() << endl;
     return -1;
   }
 
   cerr << "save done." << endl;
+  if (hasCompanion) {
+    compfs.flush();
+    compfs.close();
+  }
   return 0;
 }
 
@@ -139,6 +197,7 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
   fujimap_tool::Fujimap fm;
 
   size_t readNum = 0;
+  size_t collisions = 0;
   string line;
   for (size_t lineN = 1; getline(is, line); ++lineN){
     size_t p = line.length();
@@ -150,13 +209,14 @@ int testFile(cmdline::parser& p, fujimap_tool::Fujimap* fm1, fujimap_tool::Fujim
     if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
     } else {
       cout << "FOUND collision '" << line.c_str() <<"'" <<  endl;
+      collisions++;
     }
 
     readNum++;
   }
-  cerr << "read " << readNum << " keys" << endl;
+  cerr << "read " << readNum << " keys, " << collisions << " collisions" << endl;
 
-  cerr << "test done." << endl;
+  cerr << "test done. FP=" << (double)((double)collisions/(double)readNum) << endl;
   return 0;
 }
 
@@ -165,6 +225,7 @@ int main(int argc, char* argv[]){
   p.add<string>("index",       'i', "Index",                                                        true);
   p.add<string>("index2",      'o', "Other Index",                                                  false);
   p.add<string>("test",        'T', "test file",                                                    false);
+  p.add<string>("companion",   'c', "companion file. with -d the file is created, otherwise used.", false);
   p.add<string>("dic",         'd', "Key/Value file. when \"-\" is specified it reads from stdin",  false);
   p.add<int>   ("fpwidth",     'f', "False positive rate 2^{-f} (0 <= f < 31) ",                    false);
   p.add<int>   ("tmpN",        't', "TemporarySize",                                                false);
@@ -222,6 +283,24 @@ int main(int argc, char* argv[]){
       return 0;
     }
 
+    bool hasCompanion = p.exist("companion");
+    long companionSize=0;
+    ifstream compis;
+    unsigned char *compData = NULL;
+    if (hasCompanion) {
+      compis.open(p.get<string>("companion").c_str(), ios::binary| ios::ate);
+      if (!compis){
+        cerr << "Unable to open for read " << p.get<string>("companoin") << endl;
+        return -1;
+      }
+      companionSize = compis.tellg();
+      cout << "loading companion of " <<  companionSize << " bytes" << endl;
+      compData = new unsigned char [companionSize];
+      compis.seekg (0, ios::beg);
+      compis.read ((char*)compData, companionSize);
+      compis.close();
+    }
+
     bool stringValue = p.exist("stringvalue");
     string key;
     for (;;){
@@ -253,8 +332,22 @@ int main(int argc, char* argv[]){
           gettimeofday(&stop, NULL);
           cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << endl;
         } else {
-          gettimeofday(&stop, NULL);
-          cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << code1 << endl;
+          if (hasCompanion) {
+            code1--;
+            //  cout << "got offset " << code1 << "  " << (char*) (compData + code1) << endl;
+            if (code1 < companionSize && strcmp((char*)(compData + code1), key.c_str())==0) {
+              long v = decodeInteger(compData + code1 + key.size()+1);
+              gettimeofday(&stop, NULL);
+              cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << v << endl;
+            }
+            else {
+              gettimeofday(&stop, NULL);
+              cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << endl;
+            }
+          } else {
+            gettimeofday(&stop, NULL);
+            cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << code1 << endl;
+          }
         }
         // sleep(1);
 
