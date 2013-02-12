@@ -134,7 +134,7 @@ int buildFromFile(cmdline::parser& p){
         unsigned  int intLen = intLength(val);
         encodeInteger(val, freq, intLen);
 
-        cout << "comp " << line.c_str() << " " << freq << " "  << offset << endl;
+        //   cout << "comp " << line.c_str() << " " << freq << " "  << offset << endl;
         compfs.write(line.c_str(), p);
         compfs.write("\0", 1);
         compfs.write((char*)freq, intLen);
