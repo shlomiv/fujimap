@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "cmdline.h"
 #include "fujimap.hpp"
+#include "smaz.h"
 
 using namespace std;
 
@@ -129,18 +130,21 @@ int buildFromFile(cmdline::parser& p){
     } else {
       uint64_t val = strtoll(line.substr(p+1).c_str(), NULL, 10);
       if (hasCompanion){
-
+        char smaz[4000];
+        int smazLen = smaz_compress(line.c_str(), p, smaz, sizeof(smaz));
         unsigned char freq[6];
         unsigned  int intLen = intLength(val);
         encodeInteger(val, freq, intLen);
 
         //   cout << "comp " << line.c_str() << " " << freq << " "  << offset << endl;
-        compfs.write(line.c_str(), p);
+        //        compfs.write(line.c_str(), p);
+        compfs.write(smaz, smazLen);
         compfs.write("\0", 1);
         compfs.write((char*)freq, intLen);
 
         fm.setInteger(line.c_str(), p, offset, false);
-        offset += (p + intLen +1);
+        //        offset += (p + intLen +1);
+        offset += (smazLen + intLen + 1);
       }
       else {
         if (logValue){
@@ -334,9 +338,14 @@ int main(int argc, char* argv[]){
         } else {
           if (hasCompanion) {
             code1--;
-            //  cout << "got offset " << code1 << "  " << (char*) (compData + code1) << endl;
-            if (code1 < companionSize && strcmp((char*)(compData + code1), key.c_str())==0) {
-              long v = decodeInteger(compData + code1 + key.size()+1);
+            //cout << "got offset " << code1 << "  " << (char*) (compData + code1) << endl;
+            char smaz[5000];
+            int len = strlen((char*)(compData + code1));
+            smaz_decompress((char*)(compData + code1), len, smaz, sizeof(smaz));
+            //cout << "decompressed " << smaz << endl;
+            if (code1 < companionSize && strcmp(smaz, key.c_str())==0) {
+              //              long v = decodeInteger(compData + code1 + key.size()+1);
+              long v = decodeInteger(compData + code1 + 1 + len);
               gettimeofday(&stop, NULL);
               cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << v << endl;
             }

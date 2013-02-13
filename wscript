@@ -18,7 +18,7 @@ def build(bld):
        target       = 'fujimap',
        includes     = '.')
   task2= bld(features='cxx cprogram',
-       source       = 'fujimapMain.cpp',
+       source       = 'fujimapMain.cpp smaz.cpp',
        target       ='fujimap',
        includes     = '.',
        uselib_local = 'fujimap')
