@@ -131,20 +131,25 @@ int buildFromFile(cmdline::parser& p){
       uint64_t val = strtoll(line.substr(p+1).c_str(), NULL, 10);
       if (hasCompanion){
         char smaz[4000];
-        int smazLen = smaz_compress(line.c_str(), p, smaz, sizeof(smaz));
+        uint64_t smazLen = smaz_compress(line.c_str(), p, smaz, sizeof(smaz));
         unsigned char freq[6];
         unsigned  int intLen = intLength(val);
         encodeInteger(val, freq, intLen);
 
         //   cout << "comp " << line.c_str() << " " << freq << " "  << offset << endl;
         //        compfs.write(line.c_str(), p);
+        unsigned int  smazLenBytesLen = intLength(smazLen);
+        unsigned char smazLenBytes[6];
+        encodeInteger(smazLen, smazLenBytes, smazLenBytesLen);
+
+        compfs.write((char*)smazLenBytes, smazLenBytesLen);
         compfs.write(smaz, smazLen);
-        compfs.write("\0", 1);
+        //        compfs.write("\0", 1);
         compfs.write((char*)freq, intLen);
 
         fm.setInteger(line.c_str(), p, offset, false);
         //        offset += (p + intLen +1);
-        offset += (smazLen + intLen + 1);
+        offset += (smazLen + intLen + smazLenBytesLen);
       }
       else {
         if (logValue){
@@ -338,14 +343,15 @@ int main(int argc, char* argv[]){
         } else {
           if (hasCompanion) {
             code1--;
-            //cout << "got offset " << code1 << "  " << (char*) (compData + code1) << endl;
+            cout << "got offset " << code1 << "  " << (char*) (compData + code1) << endl;
             char smaz[5000];
-            int len = strlen((char*)(compData + code1));
+            int len = decodeInteger((const unsigned char*)(compData + code1));
             smaz_decompress((char*)(compData + code1), len, smaz, sizeof(smaz));
-            //cout << "decompressed " << smaz << endl;
+            smaz[key.size()]=0;
+            cout << "decompressed " << smaz << " of len " << len << "strcmp " << strcmp(smaz, key.c_str()) << endl;
             if (code1 < companionSize && strcmp(smaz, key.c_str())==0) {
               //              long v = decodeInteger(compData + code1 + key.size()+1);
-              long v = decodeInteger(compData + code1 + 1 + len);
+              long v = decodeInteger(compData + code1 + len + intLength(len));
               gettimeofday(&stop, NULL);
               cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << v << endl;
             }
