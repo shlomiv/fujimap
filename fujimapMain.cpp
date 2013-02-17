@@ -21,7 +21,7 @@ void printCurrentStatus(fujimap_tool::Fujimap& fm){
        << "bits/key:     " << (float)wsize / fm.getKeyNum() << endl;
 }
 
-
+/*
 inline uint64_t decodeInteger(const unsigned char* pChar) {
   return (uint64_t)(pChar[0] & 0x7f) + (
                 !(pChar[0] & 0x80) ? 0 : (((uint64_t)(pChar[1] & 0x7f)) << 7) + (
@@ -45,7 +45,7 @@ inline void encodeInteger(uint64_t i, unsigned char* pChar, int byteCount)
   }
 }
 
-
+*/
 int buildFromFile(cmdline::parser& p){
   ofstream compfs;
   istream *pis=&cin;
@@ -129,8 +129,10 @@ int buildFromFile(cmdline::parser& p){
                    false);
     } else {
       uint64_t val = strtoll(line.substr(p+1).c_str(), NULL, 10);
+
+
       if (hasCompanion){
-        char smaz[4000];
+           char smaz[4000];
         uint64_t smazLen = smaz_compress(line.c_str(), p, smaz, sizeof(smaz));
         unsigned char freq[6];
         unsigned  int intLen = intLength(val);
@@ -151,6 +153,7 @@ int buildFromFile(cmdline::parser& p){
         fm.setInteger(line.c_str(), p, offset, false);
         //        offset += (p + intLen +1);
         offset += (smazLen + intLen + smazLenBytesLen);
+
       }
       else {
         if (logValue){
@@ -259,6 +262,8 @@ int main(int argc, char* argv[]){
     return -1;
   }
 
+  bool hasCompanion = p.exist("companion");
+
   if (p.exist("dic")){
     if (buildFromFile(p) == -1){
       return -1;
@@ -269,9 +274,17 @@ int main(int argc, char* argv[]){
     if (p.exist("seed")) {
         fm.initSeed(p.get<int>("seed"));
     }
-    if (fm.load(p.get<string>("index").c_str()) == -1){
-      cerr << fm.what() << endl;
-      return -1;
+    if (hasCompanion) {
+      if (fm.load(p.get<string>("index").c_str(), p.get<string>("companion").c_str()) == -1){
+        cerr << fm.what() << endl;
+        return -1;
+      }
+    }
+    else {
+      if (fm.load(p.get<string>("index").c_str()) == -1){
+        cerr << fm.what() << endl;
+        return -1;
+      }
     }
     cout << "load done. " << endl;
     printCurrentStatus(fm);
@@ -293,8 +306,8 @@ int main(int argc, char* argv[]){
       return 0;
     }
 
-    bool hasCompanion = p.exist("companion");
-    long companionSize=0;
+
+    /*    long companionSize=0;
     ifstream compis;
     unsigned char *compData = NULL;
     if (hasCompanion) {
@@ -310,7 +323,7 @@ int main(int argc, char* argv[]){
       compis.read ((char*)compData, companionSize);
       compis.close();
     }
-
+    */
     bool stringValue = p.exist("stringvalue");
     string key;
     for (;;){
@@ -340,9 +353,9 @@ int main(int argc, char* argv[]){
 
         if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
           gettimeofday(&stop, NULL);
-          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << endl;
+          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << code1 << endl;
         } else {
-          if (hasCompanion) {
+          /*          if (hasCompanion) {
             code1--;
             char smaz[5000];
             int len = decodeInteger((const unsigned char*)(compData + code1));
@@ -361,16 +374,16 @@ int main(int argc, char* argv[]){
               gettimeofday(&stop, NULL);
               cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << endl;
             }
-          } else {
+            } else {*/
             gettimeofday(&stop, NULL);
             cout << "FOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << code1 << endl;
           }
         }
         // sleep(1);
-
-      }
     }
   }
+
+
   return 0;
 }
 

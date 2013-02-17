@@ -13,7 +13,7 @@ def configure(ctx):
 
 def build(bld):
   task1= bld(features='cxx cshlib',
-       source       = 'fujimap.cpp fujimapBlock.cpp fujimapCommon.cpp bitVec.cpp keyEdge.cpp keyFile.cpp',
+       source       = 'fujimap.cpp fujimapBlock.cpp fujimapCommon.cpp bitVec.cpp keyEdge.cpp keyFile.cpp smaz.cpp',
        name         = 'fujimap',
        target       = 'fujimap',
        includes     = '.')
@@ -43,5 +43,13 @@ def build(bld):
   task7= bld(features='cxx cprogram',
        source       = 'encodeTest.cpp fujimapCommon.cpp',
        target       ='encodeTest',
+       includes     = '.')
+  task8= bld(features='cxx cprogram',
+       source       = 'huffman.cpp',
+       target       ='huffman',
+       includes     = '.')
+  task9= bld(features='cxx cprogram',
+       source       = 'smaz-test.cpp smaz.cpp',
+       target       ='smaz-test',
        includes     = '.')
   bld.install_files('${PREFIX}/include/fujimap', bld.path.ant_glob('*.hpp'))

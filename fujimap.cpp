@@ -23,11 +23,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-
+#include <string.h>
 #include <algorithm>
 #include <fstream>
 #include <cassert>
 #include "fujimap.hpp"
+#include "smaz.h"
 
 using namespace std;
 
@@ -224,7 +225,7 @@ const char* Fujimap::getString(const char* kbuf, const size_t klen, size_t& vlen
   }
 }
 
-uint64_t Fujimap::getInteger(const char* kbuf, const size_t klen) const {
+uint64_t Fujimap::getInteger_(const char* kbuf, const size_t klen) const {
   string s(kbuf, klen);
   map<string, uint64_t>::const_iterator it = tmpEdges_.find(string(kbuf, klen));
   if (it != tmpEdges_.end()){
@@ -239,6 +240,26 @@ uint64_t Fujimap::getInteger(const char* kbuf, const size_t klen) const {
     if (ret != NOTFOUND){
       return ret;
     }
+  }
+
+  return NOTFOUND;
+}
+
+uint64_t Fujimap::getInteger(const char* kbuf, const size_t klen) const {
+  cout << "getting" << endl;
+  uint64_t i = getInteger_(kbuf, klen);
+  if (i == NOTFOUND) return NOTFOUND;
+  if (!isComp) return i;
+  i--;
+  cout << "decodeing offset " << i  << endl;
+  char smaz[5000];
+  int len = decodeInteger((const unsigned char*)(compData + i));
+  int lenSize = intLength(len);
+
+  int out = smaz_decompress((char*)(compData + i + lenSize), len, smaz, sizeof(smaz));
+  smaz[out]=0;
+  if (out == klen && i < companionSize && strcmp(smaz, kbuf)==0) {
+    return decodeInteger(compData + i + len + lenSize);
   }
 
   return NOTFOUND;
@@ -296,6 +317,28 @@ int Fujimap::load(const char* index){
   }
 
   return 0;
+}
+
+
+
+int Fujimap::load(const char* index, const char* comp) {
+  int i = load(index);
+  isComp = true;
+
+  ifstream compis;
+  compis.open(comp, ios::binary| ios::ate);
+  if (!compis){
+    cerr << "Unable to open companion file for read " << comp << endl;
+    return -1;
+  }
+  companionSize = compis.tellg();
+  cout << "loading companion of " <<  companionSize << " bytes" << endl;
+  compData = new unsigned char [companionSize];
+  compis.seekg (0, ios::beg);
+  compis.read ((char*)compData, companionSize);
+  compis.close();
+
+  return i;
 }
 
 void Fujimap::saveString(const std::string& s, ofstream& ofs) const{

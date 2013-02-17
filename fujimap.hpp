@@ -153,6 +153,11 @@ public:
    */
   int load(const char* index);
 
+  /*
+   * Load a previous status with a companion file
+   */
+  int load(const char* index, const char* comp);
+
   /**
    * Save the current status in a file
    * @param index the file name where the index is stored.
@@ -197,9 +202,14 @@ public:
   std::string getEncodeTypeStr() const;
 
 private:
+  bool isComp = false;
+  long companionSize=0;
+  unsigned char *compData = NULL;
+
   int build_(std::vector<std::pair<std::string, uint64_t> >& kvs,
              FujimapBlock& fb);
 
+  uint64_t getInteger_(const char* kbuf, const size_t klen) const;
 
   void saveString(const std::string& s, std::ofstream& ofs) const; ///< Util for save
   void loadString(std::string& s, std::ifstream& ifs) const; ///< Util for load
@@ -224,5 +234,30 @@ private:
 };
 
 }
+
+
+inline uint64_t decodeInteger(const unsigned char* pChar) {
+  return (uint64_t)(pChar[0] & 0x7f) + (
+                !(pChar[0] & 0x80) ? 0 : (((uint64_t)(pChar[1] & 0x7f)) << 7) + (
+                !(pChar[1] & 0x80) ? 0 : (((uint64_t)(pChar[2] & 0x7f)) << 14) + (
+                !(pChar[2] & 0x80) ? 0 : (((uint64_t)(pChar[3] & 0x7f)) << 21) + (
+                !(pChar[3] & 0x80) ? 0 : (((uint64_t)pChar[4] << 28))))));
+}
+
+inline int intLength(uint64_t i){
+  return i & 0xff0000000 ? 5 : i & 0xfe00000 ? 4 : i & 0x1fc000 ? 3 : i & 0x3f80 ? 2 : 1;
+}
+
+inline void encodeInteger(uint64_t i, unsigned char* pChar, int byteCount)
+{
+  switch (byteCount)  {
+  case 1: *((uint64_t*)pChar) = i & 0x7f; break;
+  case 2: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + 0x80; break;
+  case 3: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + ((i & 0x1fc000) << 2) + 0x8080; break;
+  case 4: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + ((i & 0x1fc000) << 2) + ((i & 0xfe00000) << 3) + 0x808080; break;
+  case 5: *((uint64_t*)pChar) = (i & 0x7f) + ((i & 0x3f80) << 1) + ((i & 0x1fc000) << 2) + ((i & 0xfe00000) << 3) + ((i & 0xff0000000) << 4) + 0x80808080; break;
+  }
+}
+
 
 #endif // FUJIMAP_HPP__
