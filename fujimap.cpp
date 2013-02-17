@@ -34,8 +34,8 @@ using namespace std;
 
 namespace fujimap_tool{
 
-Fujimap::Fujimap() :  seed_(0x123456), fpLen_(FPLEN), tmpN_(TMPN),
-                      keyBlockN_(KEYBLOCK), et_(BINARY), isComp(false), companionSize(0), compData(NULL) {
+  Fujimap::Fujimap() :   isComp(false), companionSize(0), compData(NULL), seed_(0x123456), fpLen_(FPLEN), tmpN_(TMPN),
+                         keyBlockN_(KEYBLOCK), et_(BINARY) {
   kf_.initMaxID(keyBlockN_);
 }
 
@@ -246,22 +246,24 @@ uint64_t Fujimap::getInteger_(const char* kbuf, const size_t klen) const {
 }
 
 uint64_t Fujimap::getInteger(const char* kbuf, const size_t klen) const {
-  cout << "getting" << endl;
   uint64_t i = getInteger_(kbuf, klen);
   if (i == NOTFOUND) return NOTFOUND;
   if (!isComp) return i;
   i--;
-  cout << "decodeing offset " << i  << endl;
   char smaz[5000];
   int len = decodeInteger((const unsigned char*)(compData + i));
+  cout << "decodeing offset " << i  << " with length " << len << endl;
   int lenSize = intLength(len);
+  uint64_t offset = i + lenSize;
+  if (offset < companionSize && len <= (klen*2)) {
+    size_t out = smaz_decompress((char*)(compData + offset), len, smaz, sizeof(smaz));
+    smaz[out]=0;
+    cout << "decompressed '" << smaz << "' len: " <<  out << " original len " << klen << endl;
+    if (out == klen && strcmp(smaz, kbuf)==0) {
+      return decodeInteger(compData + len + offset);
+    }
 
-  int out = smaz_decompress((char*)(compData + i + lenSize), len, smaz, sizeof(smaz));
-  smaz[out]=0;
-  if (out == klen && i < companionSize && strcmp(smaz, kbuf)==0) {
-    return decodeInteger(compData + i + len + lenSize);
   }
-
   return NOTFOUND;
 }
 

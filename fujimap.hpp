@@ -203,7 +203,7 @@ public:
 
 private:
   bool isComp;
-  long companionSize;
+  uint64_t companionSize;
   unsigned char *compData;
 
   int build_(std::vector<std::pair<std::string, uint64_t> >& kvs,

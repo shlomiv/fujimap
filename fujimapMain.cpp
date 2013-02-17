@@ -353,7 +353,7 @@ int main(int argc, char* argv[]){
 
         if (code1 == fujimap_tool::NOTFOUND || code2 == fujimap_tool::NOTFOUND || code1 != code2 ){
           gettimeofday(&stop, NULL);
-          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros): " << code1 << endl;
+          cout << "NOTFOUND ("<<(stop.tv_usec - start.tv_usec)<<" micros)" << endl;
         } else {
           /*          if (hasCompanion) {
             code1--;
