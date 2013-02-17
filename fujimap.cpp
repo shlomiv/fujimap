@@ -35,7 +35,7 @@ using namespace std;
 namespace fujimap_tool{
 
 Fujimap::Fujimap() :  seed_(0x123456), fpLen_(FPLEN), tmpN_(TMPN),
-                      keyBlockN_(KEYBLOCK), et_(BINARY) {
+                      keyBlockN_(KEYBLOCK), et_(BINARY), isComp(false), companionSize(0), compData(NULL) {
   kf_.initMaxID(keyBlockN_);
 }
 

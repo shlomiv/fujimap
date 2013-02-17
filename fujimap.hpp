@@ -202,9 +202,9 @@ public:
   std::string getEncodeTypeStr() const;
 
 private:
-  bool isComp = false;
-  long companionSize=0;
-  unsigned char *compData = NULL;
+  bool isComp;
+  long companionSize;
+  unsigned char *compData;
 
   int build_(std::vector<std::pair<std::string, uint64_t> >& kvs,
              FujimapBlock& fb);
