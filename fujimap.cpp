@@ -256,8 +256,9 @@ uint64_t Fujimap::getInteger(const char* kbuf, const size_t klen) const {
   int lenSize = intLength(len);
   uint64_t offset = i + lenSize;
   if (offset < companionSize && len <= (klen*2)) {
-    size_t out = smaz_decompress((char*)(compData + offset), len, smaz, sizeof(smaz));
+    size_t out = smaz_decompress((char*)(compData + offset), len, smaz, sizeof(smaz)-100);
     smaz[out]=0;
+    smaz[4999]=0;
     cout << "decompressed '" << smaz << "' len: " <<  out << " original len " << klen << endl;
     if (out == klen && strcmp(smaz, kbuf)==0) {
       return decodeInteger(compData + len + offset);
